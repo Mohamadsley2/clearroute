@@ -47,7 +47,7 @@ def load_data(source):
 with st.sidebar:
     st.header("📂 Data Source")
 
-    dados_dir  = Path("dados")
+    dados_dir  = Path("data")
     json_files = sorted(dados_dir.glob("*.json")) if dados_dir.exists() else []
     json_files += [p for p in Path(".").glob("*.json") if p not in json_files]
 

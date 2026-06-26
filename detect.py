@@ -12,13 +12,13 @@ from ultralytics import YOLO
 
 # ── Input video ───────────────────────────────────────────────────────────────
 # Change this to the path of your video file before running.
-VIDEO_PATH = r"C:\Users\AM\Desktop\VSCODe\clearroute\example4.mp4"
+VIDEO_PATH = r"C:\Users\AM\Desktop\VSCODe\clearroute\videos\example4.mp4"
 
 # ── Output file ───────────────────────────────────────────────────────────────
 # Each run creates a new file with a timestamp so previous results are never overwritten.
 # Example: dados/dados_reais_20250626_143022.json
 _timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
-OUTPUT_PATH = os.path.join("dados", f"dados_reais_{_timestamp}.json")
+OUTPUT_PATH = os.path.join("data", f"dados_reais_{_timestamp}.json")
 
 # ── Route segments ────────────────────────────────────────────────────────────
 # Each segment covers a time range (in seconds) along the collection route.
@@ -105,7 +105,7 @@ def process_video(video_path):
     and returns a list of detection dicts ready for JSON export.
     """
     # Load the YOLO11 nano model — downloads automatically on first run (~6 MB)
-    model = YOLO("best.pt")
+    model = YOLO("models/best.pt")
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     print(f"Deduplication: {before} → {len(results)} detections kept.")
 
     # Save JSON in the same format as dados_exemplo.json
-    os.makedirs("dados", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
 
