@@ -1,0 +1,142 @@
+[
+  {
+    "lat": 47.6600,
+    "lon": 9.1750,
+    "typ": "Müll",
+    "konfidenz": 0.91,
+    "zeitstempel": "00:04"
+  },
+  {
+    "lat": 47.6612,
+    "lon": 9.1763,
+    "typ": "Flasche",
+    "konfidenz": 0.78,
+    "zeitstempel": "00:11"
+  },
+  {
+    "lat": 47.6588,
+    "lon": 9.1741,
+    "typ": "Verpackung",
+    "konfidenz": 0.85,
+    "zeitstempel": "00:19"
+  },
+  {
+    "lat": 47.6621,
+    "lon": 9.1778,
+    "typ": "Becher",
+    "konfidenz": 0.67,
+    "zeitstempel": "00:27"
+  },
+  {
+    "lat": 47.6595,
+    "lon": 9.1800,
+    "typ": "Müll",
+    "konfidenz": 0.94,
+    "zeitstempel": "00:35"
+  },
+  {
+    "lat": 47.6578,
+    "lon": 9.1760,
+    "typ": "Flasche",
+    "konfidenz": 0.72,
+    "zeitstempel": "00:42"
+  },
+  {
+    "lat": 47.6640,
+    "lon": 9.1720,
+    "typ": "Verpackung",
+    "konfidenz": 0.88,
+    "zeitstempel": "00:50"
+  },
+  {
+    "lat": 47.6605,
+    "lon": 9.1695,
+    "typ": "Becher",
+    "konfidenz": 0.61,
+    "zeitstempel": "01:03"
+  },
+  {
+    "lat": 47.6630,
+    "lon": 9.1810,
+    "typ": "Müll",
+    "konfidenz": 0.97,
+    "zeitstempel": "01:15"
+  },
+  {
+    "lat": 47.6570,
+    "lon": 9.1730,
+    "typ": "Flasche",
+    "konfidenz": 0.83,
+    "zeitstempel": "01:22"
+  },
+  {
+    "lat": 47.6615,
+    "lon": 9.1745,
+    "typ": "Verpackung",
+    "konfidenz": 0.76,
+    "zeitstempel": "01:30"
+  },
+  {
+    "lat": 47.6590,
+    "lon": 9.1820,
+    "typ": "Müll",
+    "konfidenz": 0.89,
+    "zeitstempel": "01:38"
+  },
+  {
+    "lat": 47.6648,
+    "lon": 9.1768,
+    "typ": "Becher",
+    "konfidenz": 0.55,
+    "zeitstempel": "01:47"
+  },
+  {
+    "lat": 47.6582,
+    "lon": 9.1705,
+    "typ": "Flasche",
+    "konfidenz": 0.92,
+    "zeitstempel": "01:54"
+  },
+  {
+    "lat": 47.6625,
+    "lon": 9.1835,
+    "typ": "Müll",
+    "konfidenz": 0.80,
+    "zeitstempel": "02:05"
+  },
+  {
+    "lat": 47.6560,
+    "lon": 9.1755,
+    "typ": "Verpackung",
+    "konfidenz": 0.74,
+    "zeitstempel": "02:14"
+  },
+  {
+    "lat": 47.6608,
+    "lon": 9.1782,
+    "typ": "Becher",
+    "konfidenz": 0.63,
+    "zeitstempel": "02:21"
+  },
+  {
+    "lat": 47.6645,
+    "lon": 9.1700,
+    "typ": "Müll",
+    "konfidenz": 0.95,
+    "zeitstempel": "02:33"
+  },
+  {
+    "lat": 47.6575,
+    "lon": 9.1790,
+    "typ": "Flasche",
+    "konfidenz": 0.69,
+    "zeitstempel": "02:41"
+  },
+  {
+    "lat": 47.6618,
+    "lon": 9.1715,
+    "typ": "Verpackung",
+    "konfidenz": 0.87,
+    "zeitstempel": "02:50"
+  }
+]

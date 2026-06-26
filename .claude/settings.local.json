@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Users\\\\AM\\\\Desktop\\\\VSCODe\\\\clearroute\\\\deteccao\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Users\\\\AM\\\\Desktop\\\\VSCODe\\\\clearroute\\\\dashboard\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Users\\\\AM\\\\Desktop\\\\VSCODe\\\\clearroute\\\\dados\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Users\\\\AM\\\\Desktop\\\\VSCODe\\\\clearroute\\\\assets\")"
+    ]
+  }
+}
