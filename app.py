@@ -85,6 +85,9 @@ data = load_data(data_source)
 if "addr_cache" not in st.session_state:
     st.session_state.addr_cache = {}
 
+if "map_mode" not in st.session_state:
+    st.session_state.map_mode = "🔥 Heatmap"
+
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("🗺️ ClearRoute Dashboard")
 st.caption(f"Real-time urban litter detection monitoring — `{display_name}`")
@@ -156,18 +159,20 @@ def get_address(lat, lon):
         return "Adresse nicht verfügbar"
 
 # ── Map ───────────────────────────────────────────────────────────────────────
-def build_map(all_detections, marker_detections):
+def build_map(all_detections, marker_detections, mode="🔥 Heatmap"):
     """
     Builds the Folium map.
-    Addresses come from st.session_state.addr_cache — no API calls happen here.
-    On first load they show 'Loading address...'; after geocoding they show real addresses.
+    mode == '🔥 Heatmap': heatmap layer + coloured markers on top.
+    mode == '📍 Punkte':  coloured markers only, no heatmap.
     """
     m = folium.Map(location=[47.6603, 9.1758], zoom_start=14)
 
-    heat_group = folium.FeatureGroup(name="Heatmap", show=True)
-    heat_data  = [[d["lat"], d["lon"], d["konfidenz"]] for d in all_detections]
-    HeatMap(heat_data, radius=20, blur=15, max_zoom=16).add_to(heat_group)
-    heat_group.add_to(m)
+    # Only add the heatmap layer in Heatmap mode
+    if mode == "🔥 Heatmap":
+        heat_group = folium.FeatureGroup(name="Heatmap", show=True)
+        heat_data  = [[d["lat"], d["lon"], d["konfidenz"]] for d in all_detections]
+        HeatMap(heat_data, radius=20, blur=15, max_zoom=16).add_to(heat_group)
+        heat_group.add_to(m)
 
     marker_group = folium.FeatureGroup(name="Detections", show=True)
     for d in marker_detections:
@@ -203,10 +208,16 @@ def build_map(all_detections, marker_detections):
 # ── Map section ───────────────────────────────────────────────────────────────
 st.subheader("🔥 Detection Map")
 
-# This empty slot is reserved NOW (above the map in the layout).
-# The loading loop at the bottom of this script will fill it with a progress bar
-# while addresses are being fetched — after the full dashboard has already rendered.
+# Reserved slot for the address-loading progress bar (filled later in this script)
 addr_progress_slot = st.empty()
+
+# Mode toggle — persisted in session_state so it survives filter changes
+st.session_state.map_mode = st.radio(
+    "Display mode:",
+    options=["🔥 Heatmap", "📍 Punkte"],
+    index=0 if st.session_state.map_mode == "🔥 Heatmap" else 1,
+    horizontal=True,
+)
 
 all_types      = sorted({d["typ"] for d in data})
 selected_types = st.multiselect(
@@ -216,7 +227,11 @@ selected_types = st.multiselect(
 )
 filtered_data = [d for d in data if d["typ"] in selected_types] if selected_types else data
 
-litter_map = build_map(all_detections=data, marker_detections=filtered_data)
+litter_map = build_map(
+    all_detections=data,
+    marker_detections=filtered_data,
+    mode=st.session_state.map_mode,
+)
 st_folium(litter_map, use_container_width=True, height=520)
 
 st.divider()
@@ -339,7 +354,7 @@ if unloaded:
         n_done = len(st.session_state.addr_cache)
         # Update the slot reserved above the map
         addr_progress_slot.progress(
-            n_done / n_total,
+            min(n_done / n_total, 1.0),
             text=f"Loading addresses... ({n_done}/{n_total})",
         )
         # get_address is @st.cache_data — sleep only runs on first-ever fetch

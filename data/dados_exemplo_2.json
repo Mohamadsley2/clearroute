@@ -1,0 +1,177 @@
+[
+  {
+    "lat": 47.6601,
+    "lon": 9.1760,
+    "typ": "Papier",
+    "konfidenz": 0.87,
+    "zeitstempel": "00:05"
+  },
+  {
+    "lat": 47.6614,
+    "lon": 9.1739,
+    "typ": "Becher",
+    "konfidenz": 0.32,
+    "zeitstempel": "00:18"
+  },
+  {
+    "lat": 47.6589,
+    "lon": 9.1742,
+    "typ": "Plastik",
+    "konfidenz": 0.61,
+    "zeitstempel": "00:31"
+  },
+  {
+    "lat": 47.6626,
+    "lon": 9.1764,
+    "typ": "Flasche",
+    "konfidenz": 0.83,
+    "zeitstempel": "00:45"
+  },
+  {
+    "lat": 47.6578,
+    "lon": 9.1728,
+    "typ": "Dose",
+    "konfidenz": 0.27,
+    "zeitstempel": "00:58"
+  },
+  {
+    "lat": 47.6637,
+    "lon": 9.1782,
+    "typ": "Karton",
+    "konfidenz": 0.55,
+    "zeitstempel": "01:12"
+  },
+  {
+    "lat": 47.6600,
+    "lon": 9.1772,
+    "typ": "Müll",
+    "konfidenz": 0.91,
+    "zeitstempel": "01:24"
+  },
+  {
+    "lat": 47.6568,
+    "lon": 9.1718,
+    "typ": "Maske",
+    "konfidenz": 0.19,
+    "zeitstempel": "01:37"
+  },
+  {
+    "lat": 47.6647,
+    "lon": 9.1757,
+    "typ": "Papier",
+    "konfidenz": 0.48,
+    "zeitstempel": "01:50"
+  },
+  {
+    "lat": 47.6604,
+    "lon": 9.1756,
+    "typ": "Plastik",
+    "konfidenz": 0.78,
+    "zeitstempel": "02:03"
+  },
+  {
+    "lat": 47.6610,
+    "lon": 9.1743,
+    "typ": "Becher",
+    "konfidenz": 0.36,
+    "zeitstempel": "02:15"
+  },
+  {
+    "lat": 47.6593,
+    "lon": 9.1738,
+    "typ": "Flasche",
+    "konfidenz": 0.66,
+    "zeitstempel": "02:27"
+  },
+  {
+    "lat": 47.6622,
+    "lon": 9.1760,
+    "typ": "Dose",
+    "konfidenz": 0.85,
+    "zeitstempel": "02:39"
+  },
+  {
+    "lat": 47.6582,
+    "lon": 9.1732,
+    "typ": "Müll",
+    "konfidenz": 0.43,
+    "zeitstempel": "02:51"
+  },
+  {
+    "lat": 47.6562,
+    "lon": 9.1712,
+    "typ": "Karton",
+    "konfidenz": 0.22,
+    "zeitstempel": "03:04"
+  },
+  {
+    "lat": 47.6633,
+    "lon": 9.1778,
+    "typ": "Maske",
+    "konfidenz": 0.92,
+    "zeitstempel": "03:16"
+  },
+  {
+    "lat": 47.6597,
+    "lon": 9.1768,
+    "typ": "Papier",
+    "konfidenz": 0.57,
+    "zeitstempel": "03:28"
+  },
+  {
+    "lat": 47.6643,
+    "lon": 9.1753,
+    "typ": "Plastik",
+    "konfidenz": 0.17,
+    "zeitstempel": "03:39"
+  },
+  {
+    "lat": 47.6590,
+    "lon": 9.1741,
+    "typ": "Becher",
+    "konfidenz": 0.79,
+    "zeitstempel": "03:51"
+  },
+  {
+    "lat": 47.6627,
+    "lon": 9.1763,
+    "typ": "Flasche",
+    "konfidenz": 0.69,
+    "zeitstempel": "04:02"
+  },
+  {
+    "lat": 47.6571,
+    "lon": 9.1721,
+    "typ": "Dose",
+    "konfidenz": 0.34,
+    "zeitstempel": "04:10"
+  },
+  {
+    "lat": 47.6636,
+    "lon": 9.1779,
+    "typ": "Müll",
+    "konfidenz": 0.88,
+    "zeitstempel": "04:17"
+  },
+  {
+    "lat": 47.6601,
+    "lon": 9.1771,
+    "typ": "Karton",
+    "konfidenz": 0.52,
+    "zeitstempel": "04:22"
+  },
+  {
+    "lat": 47.6558,
+    "lon": 9.1709,
+    "typ": "Maske",
+    "konfidenz": 0.29,
+    "zeitstempel": "04:26"
+  },
+  {
+    "lat": 47.6646,
+    "lon": 9.1756,
+    "typ": "Plastik",
+    "konfidenz": 0.76,
+    "zeitstempel": "04:30"
+  }
+]
