@@ -7,18 +7,27 @@ Run:  python detect.py
 import cv2
 import json
 import os
+from pathlib import Path
 from datetime import datetime
 from ultralytics import YOLO
 
 # ── Input video ───────────────────────────────────────────────────────────────
 # Change this to the path of your video file before running.
-VIDEO_PATH = r"C:\Users\AM\Desktop\VSCODe\clearroute\videos\example4.mp4"
+VIDEO_PATH = r"C:\Users\julir\OneDrive\Escritorio\Hackathlon\clearroute\videos\example4.mp4"
 
 # ── Output file ───────────────────────────────────────────────────────────────
 # Each run creates a new file with a timestamp so previous results are never overwritten.
 # Example: dados/dados_reais_20250626_143022.json
 _timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
+_video_stem = Path(VIDEO_PATH).stem  # e.g. "example2"
 OUTPUT_PATH = os.path.join("data", f"dados_reais_{_timestamp}.json")
+
+# ── Frames folder (one per run) ───────────────────────────────────────────────
+# Annotated frames are named only by timestamp (frame_00m12s.jpg), so saving every
+# run into a shared frames/ folder would overwrite frames from previous videos at
+# the same second. Each run gets its own subfolder, keyed by video name + timestamp,
+# so a JSON's frame_path always points to that video's frame — never another's.
+FRAMES_DIR = os.path.join("frames", f"{_video_stem}_{_timestamp}")
 
 # ── Route segments ────────────────────────────────────────────────────────────
 # Each segment covers a time range (in seconds) along the collection route.
@@ -99,13 +108,14 @@ def deduplicate(detections, time_window=3):
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
 
-def process_video(video_path):
+def process_video(video_path, frames_dir):
     """
     Reads the video 1 frame per second, runs YOLO on each frame,
     and returns a list of detection dicts ready for JSON export.
+    Annotated frames are written to `frames_dir` (unique per run).
     """
     # Load the YOLO11 nano model — downloads automatically on first run (~6 MB)
-    model = YOLO("models/best.pt")
+    model = YOLO("models/best2.pt")
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -121,8 +131,8 @@ def process_video(video_path):
     print(f"Video loaded: {total_frames} frames @ {fps:.1f} fps ({duration_sec}s total)")
     print(f"Extracting {FPS_EXTRACTION} frames/s → {n_samples} frames to analyse\n")
 
-    # Create the frames/ folder once before the loop starts
-    os.makedirs("frames", exist_ok=True)
+    # Create this run's frames folder once before the loop starts
+    os.makedirs(frames_dir, exist_ok=True)
 
     detections = []
     frames_processed = 0
@@ -162,7 +172,7 @@ def process_video(video_path):
         if frame_detections:
             # "00:07" → "frame_00m07s.jpg"
             fname      = f"frame_{timestamp.replace(':', 'm')}s.jpg"
-            frame_path = os.path.join("frames", fname)
+            frame_path = os.path.join(frames_dir, fname)
             # results[0].plot() draws bounding boxes on the frame (returns BGR numpy array)
             cv2.imwrite(frame_path, results[0].plot())
 
@@ -191,9 +201,10 @@ if __name__ == "__main__":
 
     print("=== ClearRoute — Detection Pipeline ===\n")
     print(f"Video file : {VIDEO_PATH}")
-    print(f"Output file: {OUTPUT_PATH}\n")
+    print(f"Output file: {OUTPUT_PATH}")
+    print(f"Frames dir : {FRAMES_DIR}\n")
 
-    results = process_video(VIDEO_PATH)
+    results = process_video(VIDEO_PATH, FRAMES_DIR)
 
     before = len(results)
     results = deduplicate(results)

@@ -9,8 +9,11 @@ models/
 frames/
 data/dados_reais_*.json
 
-# Streamlit cache
-.streamlit/
+# Streamlit cache + secrets (keep the .example tracked)
+.streamlit/secrets.toml
+
+# Demo route data generated locally
+data/dados_demo_*.json
 
 # VS Code
 .vscode/

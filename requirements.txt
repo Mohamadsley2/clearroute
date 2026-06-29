@@ -1,0 +1,13 @@
+# ── Dashboard ───────────────────────────────────────────────────────────────
+streamlit
+folium
+streamlit-folium
+requests
+
+# ── Route planning (AI + Google Maps) ────────────────────────────────────────
+anthropic            # Claude API — generates the assignment and order of the routes
+scikit-learn         # k-means to pre-group points when there are many
+
+# ── Detection (detect.py / webcam_teste.py) ──────────────────────────────────
+ultralytics          # YOLO
+opencv-python

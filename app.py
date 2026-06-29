@@ -1,11 +1,15 @@
+import os
 import json
 import time
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 import folium
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 from pathlib import Path
+
+import routing
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -256,40 +260,281 @@ def build_priority_table(detections):
         row["Rank"] = i + 1
     return scored
 
-st.subheader("🚨 Priority Queue")
-st.caption("Sorted by cleanup score — top 3 are highlighted for immediate action")
-
 rows = build_priority_table(data)
 
-for row in rows:
-    rank    = row["Rank"]
-    is_top3 = rank <= 3
+st.subheader("🚨 Priority Queue")
+with st.expander(f"Show priority list — {len(rows)} detections", expanded=False):
+    st.caption("Sorted by cleanup score — top 3 are highlighted for immediate action")
+    for row in rows:
+        rank    = row["Rank"]
+        is_top3 = rank <= 3
 
-    if rank == 1:
-        badge = "🥇"; colour = "#FF4B4B"
-    elif rank == 2:
-        badge = "🥈"; colour = "#FF8C00"
-    elif rank == 3:
-        badge = "🥉"; colour = "#FFC300"
+        if rank == 1:
+            badge = "🥇"; colour = "#FF4B4B"
+        elif rank == 2:
+            badge = "🥈"; colour = "#FF8C00"
+        elif rank == 3:
+            badge = "🥉"; colour = "#FFC300"
+        else:
+            badge = f"#{rank}"; colour = "#555555"
+
+        card_style = (
+            f"background-color:{'#1e1e2e' if is_top3 else '#262630'};"
+            f"border-left: 4px solid {colour};"
+            f"padding: 8px 14px; border-radius: 6px; margin-bottom: 6px;"
+            f"font-family: monospace;"
+        )
+        st.html(
+            f"<div style='{card_style}'>"
+            f"<span style='color:{colour}; font-weight:bold;'>{badge}</span>&nbsp;&nbsp;"
+            f"<b>{row['Type']}</b>&nbsp;&nbsp;|&nbsp;&nbsp;"
+            f"📍 {row['Lat']}, {row['Lon']}&nbsp;&nbsp;|&nbsp;&nbsp;"
+            f"⏱ {row['Time']}&nbsp;&nbsp;|&nbsp;&nbsp;"
+            f"Score: <b>{row['Score']}</b>&nbsp;&nbsp;"
+            f"<span style='color:#aaa;'>(conf {row['Confidence']})</span>"
+            f"</div>"
+        )
+
+st.divider()
+
+# ── Route Planning ─────────────────────────────────────────────────────────────
+def get_secret(name):
+    """Reads a key from st.secrets, falling back to environment variables."""
+    val = ""
+    try:
+        val = st.secrets.get(name, "")
+    except Exception:
+        val = ""
+    return (val or os.environ.get(name, "")).strip()
+
+
+_GMAPS_TEMPLATE = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html,body{height:100%;margin:0;padding:0;font-family:sans-serif;}
+  #map{height:100%;width:100%;background:#1b1b1b;}
+  #err{display:none;position:absolute;top:0;left:0;right:0;padding:14px 16px;
+       background:#3a1c1c;color:#ffc2c2;font-size:13px;line-height:1.45;z-index:9;}
+  #legend{position:absolute;bottom:12px;left:12px;background:rgba(20,20,28,.85);
+          color:#fff;padding:8px 10px;border-radius:6px;font-size:12px;z-index:8;}
+  #legend div{margin:2px 0;}
+  #legend span{display:inline-block;width:12px;height:12px;border-radius:50%;
+               margin-right:6px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="err"></div>
+<div id="legend"></div>
+<script>
+const DEPOT = __DEPOT__;
+const ROUTES = __ROUTES__;
+function showError(msg){
+  var e = document.getElementById('err');
+  e.innerHTML = msg; e.style.display = 'block';
+}
+window.gm_authFailure = function(){
+  showError('⚠️ Google Maps authentication error. Enable the <b>Maps JavaScript API</b> ' +
+            'in Google Cloud and make sure the key restriction allows this origin (localhost:8501).');
+};
+function initMap(){
+  try {
+    const map = new google.maps.Map(document.getElementById('map'), {
+      center: {lat: DEPOT.lat, lng: DEPOT.lon}, zoom: 13,
+      mapTypeControl: false, streetViewControl: false, fullscreenControl: true
+    });
+    const bounds = new google.maps.LatLngBounds();
+    const depotPos = {lat: DEPOT.lat, lng: DEPOT.lon};
+    new google.maps.Marker({position: depotPos, map, title: 'Depot (start/end)',
+      label: {text: '★', color: 'white', fontSize: '15px'},
+      icon: {path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#111',
+             fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2}});
+    bounds.extend(depotPos);
+
+    ROUTES.forEach(function(r){
+      if (r.polylines && r.polylines.length) {
+        let pathCoords = [];
+        r.polylines.forEach(function(enc){
+          pathCoords = pathCoords.concat(google.maps.geometry.encoding.decodePath(enc));
+        });
+        new google.maps.Polyline({path: pathCoords, map, strokeColor: r.color,
+          strokeOpacity: 0.9, strokeWeight: 5});
+      } else {
+        const straight = [depotPos]
+          .concat(r.stops.map(function(s){return {lat:s.lat, lng:s.lon};}))
+          .concat([depotPos]);
+        new google.maps.Polyline({path: straight, map, strokeColor: r.color,
+          strokeOpacity: 0.8, strokeWeight: 3,
+          icons:[{icon:{path:'M 0,-1 0,1', strokeOpacity:1, scale:3}, offset:'0', repeat:'14px'}]});
+      }
+      r.stops.forEach(function(s){
+        const pos = {lat: s.lat, lng: s.lon};
+        new google.maps.Marker({position: pos, map,
+          title: 'V' + r.vehicle + ' · ' + s.typ + ' · score ' + s.score,
+          label: {text: String(s.seq), color: 'white', fontSize: '10px', fontWeight: 'bold'},
+          icon: {path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: r.color,
+                 fillOpacity: 1, strokeColor: '#fff', strokeWeight: 1}});
+        bounds.extend(pos);
+      });
+    });
+    if (!bounds.isEmpty()) map.fitBounds(bounds);
+
+    var leg = '<div><span style="background:#111"></span>Depot</div>';
+    ROUTES.forEach(function(r){
+      leg += '<div><span style="background:' + r.color + '"></span>Vehicle ' +
+             r.vehicle + ' (' + r.stops.length + ' stops)</div>';
+    });
+    document.getElementById('legend').innerHTML = leg;
+  } catch (e) {
+    showError('Error drawing the map: ' + e.message);
+  }
+}
+window.initMap = initMap;
+setTimeout(function(){
+  if (!(window.google && window.google.maps)) {
+    showError('⏳ Google Maps could not load. Check in Google Cloud: ' +
+              '(1) <b>Maps JavaScript API</b> enabled; (2) the key allows this site; ' +
+              '(3) billing active. Meanwhile you can switch to OpenStreetMap above.');
+  }
+}, 6000);
+</script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=__KEY__&libraries=geometry&callback=initMap"></script>
+</body>
+</html>"""
+
+
+def render_google_map_html(routes, depot, api_key):
+    """Builds the Google Maps HTML embed with one coloured route per vehicle."""
+    depot_json = json.dumps({"lat": depot[0], "lon": depot[1]})
+    routes_json = json.dumps([
+        {
+            "vehicle": r["vehicle"],
+            "color": r["color"],
+            "polylines": r["polylines"],
+            "stops": [
+                {"lat": s["lat"], "lon": s["lon"], "seq": s["seq"],
+                 "typ": s["typ"], "score": s["score"]}
+                for s in r["stops"]
+            ],
+        }
+        for r in routes
+    ])
+    return (
+        _GMAPS_TEMPLATE
+        .replace("__DEPOT__", depot_json)
+        .replace("__ROUTES__", routes_json)
+        .replace("__KEY__", api_key)
+    )
+
+
+def render_folium_routes(routes, depot):
+    """Free OpenStreetMap fallback when no Google Maps key is configured."""
+    m = folium.Map(location=[depot[0], depot[1]], zoom_start=13)
+    folium.Marker(
+        [depot[0], depot[1]], tooltip="Depot (start/end)",
+        icon=folium.Icon(color="black", icon="home", prefix="fa"),
+    ).add_to(m)
+    for r in routes:
+        pts = [[depot[0], depot[1]]]
+        pts += [[s["lat"], s["lon"]] for s in r["stops"]]
+        pts += [[depot[0], depot[1]]]
+        folium.PolyLine(pts, color=r["color"], weight=4, opacity=0.8,
+                        tooltip=f"Vehicle {r['vehicle']}").add_to(m)
+        for s in r["stops"]:
+            folium.CircleMarker(
+                [s["lat"], s["lon"]], radius=7, color=r["color"], fill=True,
+                fill_color=r["color"], fill_opacity=0.9,
+                tooltip=f"#{s['seq']} · {s['typ']} · score {s['score']}",
+            ).add_to(m)
+    return m
+
+
+st.subheader("🚚 Route Planning")
+st.caption(f"Base (start and end for all vehicles): **{routing.DEPOT_ADDRESS}**")
+
+route_points = [
+    {"id": i, "lat": d["lat"], "lon": d["lon"], "typ": d["typ"],
+     "konfidenz": d["konfidenz"], "score": calculate_score(d)}
+    for i, d in enumerate(data)
+]
+
+anthropic_key = get_secret("ANTHROPIC_API_KEY")
+gmaps_key     = get_secret("GOOGLE_MAPS_API_KEY")
+
+col_ctrl, col_status = st.columns([1, 2])
+with col_ctrl:
+    n_vehicles = st.number_input(
+        "Vehicles available",
+        min_value=1, max_value=max(1, len(route_points)),
+        value=min(3, max(1, len(route_points))), step=1,
+    )
+    generate = st.button("🧭 Generate routes", type="primary", use_container_width=True)
+with col_status:
+    st.markdown(
+        f"- AI (Claude): {'✅ configured' if anthropic_key else '⚠️ missing `ANTHROPIC_API_KEY`'}\n"
+        f"- Google Maps: {'✅ configured' if gmaps_key else '⚠️ missing `GOOGLE_MAPS_API_KEY`'}"
+    )
+    if not anthropic_key or not gmaps_key:
+        st.caption("Keys go in `.streamlit/secrets.toml`. Without them a local assignment "
+                   "and an OpenStreetMap preview are used.")
+
+if generate:
+    with st.spinner("Geocoding the depot and generating routes…"):
+        depot = routing.geocode_depot(routing.DEPOT_ADDRESS, gmaps_key)
+        routes, info = routing.plan_routes(
+            route_points, int(n_vehicles), depot,
+            anthropic_key=anthropic_key, gmaps_key=gmaps_key,
+        )
+    st.session_state["routes_result"] = {"routes": routes, "info": info, "depot": depot}
+
+result = st.session_state.get("routes_result")
+if result and result["routes"]:
+    routes, info, depot = result["routes"], result["info"], result["depot"]
+
+    engine = {"claude": "Claude (AI)", "fallback": "local assignment (no AI)"}.get(
+        info["engine"], "—")
+    real = routes and all(r["directions_ok"] for r in routes)
+    total_km = sum(r["distance_m"] for r in routes) / 1000
+    summary = f"✅ {len(routes)} routes generated · {len(route_points)} stops · engine: {engine}"
+    if real:
+        summary += f" · {total_km:.1f} km total"
+    st.success(summary)
+    for w in info.get("warnings", []):
+        st.warning(w)
+
+    # ── Route map ──
+    st.markdown("#### 🗺️ Route map per vehicle")
+    if gmaps_key:
+        provider = st.radio(
+            "Map provider", ["Google Maps", "OpenStreetMap"],
+            horizontal=True, key="map_provider",
+            help="If Google Maps shows blank, enable the Maps JavaScript API "
+                 "or use OpenStreetMap (always works).",
+        )
     else:
-        badge = f"#{rank}"; colour = "#555555"
+        provider = "OpenStreetMap"
 
-    card_style = (
-        f"background-color:{'#1e1e2e' if is_top3 else '#262630'};"
-        f"border-left: 4px solid {colour};"
-        f"padding: 8px 14px; border-radius: 6px; margin-bottom: 6px;"
-        f"font-family: monospace;"
-    )
-    st.html(
-        f"<div style='{card_style}'>"
-        f"<span style='color:{colour}; font-weight:bold;'>{badge}</span>&nbsp;&nbsp;"
-        f"<b>{row['Type']}</b>&nbsp;&nbsp;|&nbsp;&nbsp;"
-        f"📍 {row['Lat']}, {row['Lon']}&nbsp;&nbsp;|&nbsp;&nbsp;"
-        f"⏱ {row['Time']}&nbsp;&nbsp;|&nbsp;&nbsp;"
-        f"Score: <b>{row['Score']}</b>&nbsp;&nbsp;"
-        f"<span style='color:#aaa;'>(conf {row['Confidence']})</span>"
-        f"</div>"
-    )
+    if provider == "Google Maps":
+        components.html(render_google_map_html(routes, depot, gmaps_key), height=580)
+        st.caption("If the box shows blank, it will display the reason (usually the "
+                   "**Maps JavaScript API** is not enabled). You can switch to OpenStreetMap above.")
+    else:
+        st_folium(render_folium_routes(routes, depot),
+                  use_container_width=True, height=540, key="osm_routes_map")
+
+    for r in routes:
+        header = f"Vehicle {r['vehicle']} — {len(r['stops'])} stops"
+        if r["directions_ok"]:
+            header += f"  ·  {r['distance_m']/1000:.1f} km  ·  {r['duration_s']//60} min"
+        with st.expander(header):
+            order = " → ".join(f"#{s['seq']} {s['typ']}" for s in r["stops"]) or "(no stops)"
+            st.markdown(f"**Visit order:** {order}")
+            if r.get("reasoning"):
+                st.markdown(f"**Reasoning (AI):** {r['reasoning']}")
+            if not r["directions_ok"] and gmaps_key:
+                st.caption("Route shown as a straight line (Directions unavailable for this route).")
 
 st.divider()
 
