@@ -13,7 +13,11 @@ from ultralytics import YOLO
 
 # ── Input video ───────────────────────────────────────────────────────────────
 # Change this to the path of your video file before running.
+<<<<<<< Updated upstream
 VIDEO_PATH = r"C:\Users\julir\OneDrive\Escritorio\Hackathlon\clearroute\videos\example4.mp4"
+=======
+VIDEO_PATH = r"C:\Users\AM\Desktop\VSCODe\clearroute\videos\example5.mp4"
+>>>>>>> Stashed changes
 
 # ── Output file ───────────────────────────────────────────────────────────────
 # Each run creates a new file with a timestamp so previous results are never overwritten.
@@ -41,7 +45,7 @@ ROTA = [
 
 # ── Detection settings ────────────────────────────────────────────────────────
 MIN_CONFIDENCE = 0.25   # detections below this score are ignored
-FPS_EXTRACTION = 2      # frames extracted per second of video
+FPS_EXTRACTION = 3      # frames extracted per second of video
 
 # ── Class filter (Trash-AI v2 — best.pt) ─────────────────────────────────────
 # Key: class name as best.pt reports it → Value: German label for the JSON.
