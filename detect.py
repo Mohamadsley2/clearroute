@@ -1,6 +1,6 @@
 """
 detect.py — ClearRoute Phase 2
-Runs YOLO11n on a video, georeferences each detection, and writes dados_reais.json.
+Runs YOLO11n on a video, georeferences each detection, and writes real_data.json.
 Run:  python detect.py
 """
 
@@ -13,18 +13,14 @@ from ultralytics import YOLO
 
 # ── Input video ───────────────────────────────────────────────────────────────
 # Change this to the path of your video file before running.
-<<<<<<< Updated upstream
-VIDEO_PATH = r"C:\Users\julir\OneDrive\Escritorio\Hackathlon\clearroute\videos\example4.mp4"
-=======
 VIDEO_PATH = r"C:\Users\AM\Desktop\VSCODe\clearroute\videos\example5.mp4"
->>>>>>> Stashed changes
 
 # ── Output file ───────────────────────────────────────────────────────────────
 # Each run creates a new file with a timestamp so previous results are never overwritten.
-# Example: dados/dados_reais_20250626_143022.json
+# Example: data/real/real_data_20250626_143022.json
 _timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
 _video_stem = Path(VIDEO_PATH).stem  # e.g. "example2"
-OUTPUT_PATH = os.path.join("data", f"dados_reais_{_timestamp}.json")
+OUTPUT_PATH = os.path.join("data", "real", f"real_data_{_timestamp}.json")
 
 # ── Frames folder (one per run) ───────────────────────────────────────────────
 # Annotated frames are named only by timestamp (frame_00m12s.jpg), so saving every
@@ -37,10 +33,10 @@ FRAMES_DIR = os.path.join("frames", f"{_video_stem}_{_timestamp}")
 # Each segment covers a time range (in seconds) along the collection route.
 # The GPS coordinates are fixed per street — they'll be replaced by real GPS
 # data once the vehicle has a live feed.
-ROTA = [
-    {"inicio": 0,   "fim": 60,  "lat": 47.6762, "lon": 9.1691, "rua": "Marktstätte"},
-    {"inicio": 60,  "fim": 120, "lat": 47.6762, "lon": 9.1691, "rua": "Hussenstraße"},
-    {"inicio": 120, "fim": 180, "lat": 47.6762, "lon": 9.1691, "rua": "Seeufer"},
+ROUTE = [
+    {"start": 0,   "end": 60,  "lat": 47.6762, "lon": 9.1691, "street": "Marktstätte"},
+    {"start": 60,  "end": 120, "lat": 47.6762, "lon": 9.1691, "street": "Hussenstraße"},
+    {"start": 120, "end": 180, "lat": 47.6762, "lon": 9.1691, "street": "Seeufer"},
 ]
 
 # ── Detection settings ────────────────────────────────────────────────────────
@@ -75,11 +71,11 @@ def get_coordinates(total_seconds):
     Returns (lat, lon) for the route segment that contains `total_seconds`.
     Falls back to the last segment if the video is longer than the route.
     """
-    for segment in ROTA:
-        if segment["inicio"] <= total_seconds < segment["fim"]:
+    for segment in ROUTE:
+        if segment["start"] <= total_seconds < segment["end"]:
             return segment["lat"], segment["lon"]
     # Beyond the defined route — use the last known position
-    return ROTA[-1]["lat"], ROTA[-1]["lon"]
+    return ROUTE[-1]["lat"], ROUTE[-1]["lon"]
 
 
 # ── Deduplication ────────────────────────────────────────────────────────────
@@ -114,7 +110,7 @@ def deduplicate(detections, time_window=3):
 
 def process_video(video_path, frames_dir):
     """
-    Reads the video 1 frame per second, runs YOLO on each frame,
+    Reads the video at FPS_EXTRACTION frames/s, runs YOLO on each frame,
     and returns a list of detection dicts ready for JSON export.
     Annotated frames are written to `frames_dir` (unique per run).
     """
@@ -214,8 +210,8 @@ if __name__ == "__main__":
     results = deduplicate(results)
     print(f"Deduplication: {before} → {len(results)} detections kept.")
 
-    # Save JSON in the same format as dados_exemplo.json
-    os.makedirs("data", exist_ok=True)
+    # Save JSON in the same format as the example data files
+    os.makedirs(os.path.join("data", "real"), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
 
